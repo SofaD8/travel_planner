@@ -1,0 +1,24 @@
+.env
+*.db
+*.sqlite3
+
+.venv/
+venv/
+env/
+ENV/
+
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# Git
+.git
+.gitignore
