@@ -15,7 +15,7 @@ class ArtInstituteClient:
                 )
                 if response.status_code == 200:
                     return True
-                if response.status_code == 404:
+                if 400 <= response.status_code < 500:
                     return False
                 raise HTTPException(
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

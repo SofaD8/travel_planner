@@ -18,11 +18,16 @@ class TravelPlannerService:
             start_date: date | None = None,
             external_places: list[int] | None = None
     ) -> Project:
-
-        if external_places and len(external_places) > 10:
+        if not external_places:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="A project can contain a maximum of 10 places."
+                detail="At least one place is required to create a project."
+            )
+
+        if len(set(external_places)) != len(external_places):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Duplicate external place IDs are not allowed."
             )
 
         new_project = Project(
@@ -33,23 +38,20 @@ class TravelPlannerService:
         db.add(new_project)
         await db.flush()
 
-        if external_places:
-            unique_external_ids = list(set(external_places))
-
-            for ext_id in unique_external_ids:
-                is_valid = await ArtInstituteClient.validate_artwork(ext_id)
-                if not is_valid:
-                    raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        detail=f"Place with external ID {ext_id} "
-                               f"does not exist in Art Institute API."
-                    )
-
-                new_place = Place(
-                    project_id=new_project.id,
-                    external_id=ext_id
+        for ext_id in external_places:
+            is_valid = await ArtInstituteClient.validate_artwork(ext_id)
+            if not is_valid:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Place with external ID {ext_id} "
+                           f"does not exist in Art Institute API."
                 )
-                db.add(new_place)
+
+            new_place = Place(
+                project_id=new_project.id,
+                external_id=ext_id
+            )
+            db.add(new_place)
 
         await db.commit()
         await db.refresh(new_project)
@@ -110,6 +112,26 @@ class TravelPlannerService:
         await db.commit()
         await db.refresh(new_place)
         return new_place
+
+    @staticmethod
+    async def get_place_in_project(
+            db: AsyncSession,
+            project_id: int,
+            place_id: int
+    ) -> Place:
+        result = await db.execute(
+            select(Place).filter(
+                Place.id == place_id,
+                Place.project_id == project_id
+            )
+        )
+        place = result.scalars().first()
+        if not place:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Place within this project not found."
+            )
+        return place
 
     @staticmethod
     async def delete_project(db: AsyncSession, project_id: int):

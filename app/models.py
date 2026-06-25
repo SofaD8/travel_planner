@@ -9,11 +9,13 @@ from sqlalchemy import (
     UniqueConstraint
 )
 from sqlalchemy.orm import relationship
+
 from app.database import Base
 
 
 class Project(Base):
     __tablename__ = "projects"
+    __allow_unmapped__ = True
 
     id = Column(
         Integer,

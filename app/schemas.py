@@ -1,4 +1,9 @@
-from pydantic import BaseModel, Field
+from typing import List
+from pydantic import (
+    BaseModel,
+    Field,
+    ConfigDict
+)
 from datetime import date
 
 
@@ -21,8 +26,7 @@ class PlaceResponse(PlaceBase):
     project_id: int
     is_visited: bool
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ProjectBase(BaseModel):
@@ -32,7 +36,7 @@ class ProjectBase(BaseModel):
 
 
 class ProjectCreate(ProjectBase):
-    external_places: list[int] | None = None
+    external_places: List[int] = Field(..., min_length=1, max_length=10)
 
 
 class ProjectUpdate(BaseModel):
@@ -44,7 +48,6 @@ class ProjectUpdate(BaseModel):
 class ProjectResponse(ProjectBase):
     id: int
     is_completed: bool
-    places: list[PlaceResponse] = []
+    places: List[PlaceResponse] = Field(default_factory=list)
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
