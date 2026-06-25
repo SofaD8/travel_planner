@@ -5,7 +5,8 @@ from sqlalchemy import (
     String,
     Date,
     Boolean,
-    ForeignKey
+    ForeignKey,
+    UniqueConstraint
 )
 from sqlalchemy.orm import relationship
 from app.database import Base
@@ -50,3 +51,7 @@ class Place(Base):
     is_visited = Column(Boolean, default=False, nullable=False)
 
     project = relationship("Project", back_populates="places")
+
+    __table_args__ = (
+        UniqueConstraint('project_id', 'external_id', name='_project_external_uc'),
+    )
